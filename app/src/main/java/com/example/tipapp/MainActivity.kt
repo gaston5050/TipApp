@@ -49,20 +49,24 @@ fun calcularPropina( subtotal: Double = 0.0, modifier: Modifier = Modifier
 
         Text(text = "Calculador de propinas", modifier = Modifier.padding(16.dp))
 
-
+        // uso remember para que el valor actualizado de la Var se guarde entre recomposiciones de la app
+        // es mutable para que se pueda actualizar el valor
         var subtotalTexto by remember {
             mutableStateOf("")
         }
-        //var calculo (A:Double, B:Double -> Double)
-        var subtotal = subtotalTexto.toDoubleOrNull()  ?:  0.0
 
+        // asigno un valor predeterminado por si la variable es null
+        var subtotal = subtotalTexto.toDoubleOrNull()  ?:  0.0
+        // firma del metodo lambda  para clacular la propina
         var calcular: (Double) -> Double= {it  + it * 0.15}
         var total: String = "%.2f".format(calcular(subtotal.toDouble()))
 
         TextField(
+            singleLine = true,
+
             value = subtotalTexto,
             onValueChange = { subtotalTexto = it},
-            label = { Text("Nombre") }
+            label = { Text("IMPORTE") }
         )
         //editarCampoPropina()
         Text(text = "$${total}")
