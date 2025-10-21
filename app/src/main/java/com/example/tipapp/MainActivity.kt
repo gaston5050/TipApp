@@ -4,13 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -27,7 +34,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.tipapp.ui.theme.TipAppTheme
-import java.time.format.TextStyle
+import kotlin.math.ceil
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,31 +71,58 @@ fun calcularPropina2(){
 
     var porcentaje: Double = porcentajeIngresado.toDoubleOrNull() ?: 0.0
 
+    var roundUp by remember { mutableStateOf(false) }
+
 
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .wrapContentSize(Alignment.Center),
+        .wrapContentSize(Alignment.Center)
+        .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally){
 
         Text(text= stringResource(R.string.calculate_tip), fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.padding(16.dp))
 
         Text(text= "Subtotal")
-        ingresoDatos(montoIngresado, {montoIngresado = it})
+        ingresoDatos(montoIngresado, leadingIcon = R.drawable.money,{montoIngresado = it})
 
         Text(text= stringResource(R.string.porcentaje_de_propina))
 
         IngresoPorcentaje(porcentajeIngresado, {porcentajeIngresado = it})
 
 
+
+        Spacer(modifier = Modifier.padding(16.dp))
+
+        RoundTheTipRow(roundUp = roundUp, onRoundUpChanged = {roundUp = it})
+
         Spacer(modifier = Modifier.padding(16.dp))
         if(monto != 0.0 && porcentaje != 0.0) {
-            Text(text = "Total", fontWeight = FontWeight.Bold)
-            Text(
-                text = "%.2f".format(calculoPropina(monto, porcentaje)),
-                fontWeight = FontWeight.Bold
-            )
+            if (roundUp) {
+                Text(text = "Propina", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "%.2f".format(((monto * porcentaje)/100)),
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = "Total", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "%.2f".format(ceil(calculoPropina(monto, porcentaje))),
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Text(text = "Propina", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "%.2f".format((monto * porcentaje)/100),
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = "Total", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "%.2f".format(calculoPropina(monto, porcentaje)),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
         }
 
 
@@ -96,9 +132,34 @@ fun calcularPropina2(){
 
 }
 
+
 fun calculoPropina(monto: Double, porcentaje: Double): Double{
 
     return monto + (monto * porcentaje)/100
+
+}
+
+@Composable
+fun RoundTheTipRow(
+    roundUp: Boolean,
+    onRoundUpChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+
+    Row(modifier= modifier
+        .fillMaxWidth()
+        .size(48.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Text(text = "Redondea?")
+        Switch(
+            checked = roundUp,
+            onCheckedChange = onRoundUpChanged,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentWidth(Alignment.End)
+        )
+    }
 
 }
 
@@ -106,16 +167,19 @@ fun calculoPropina(monto: Double, porcentaje: Double): Double{
 @Composable
 fun ingresoDatos(
     montoIngresado: String,
+    @DrawableRes leadingIcon: Int,
     cambioMonto: (String) -> Unit,
     modifier: Modifier = Modifier
 ){
 
     TextField(
         value = montoIngresado,
+        leadingIcon = { Icon(painter = painterResource(id = leadingIcon), null) },
         onValueChange = cambioMonto,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
         modifier = modifier
     )
+
 
 
 
